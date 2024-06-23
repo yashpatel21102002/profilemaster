@@ -1,20 +1,13 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTrigger,
-} from "../ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { MenuIcon } from "lucide-react";
 import clsx from "clsx";
 import Image from "next/image";
-import { currentUser } from "@clerk/nextjs/server";
 import { Separator } from "../ui/separator";
-import Link from "next/link";
 import { SideBarOptions } from "@/lib/constants";
+import { useRouter } from "next/navigation";
 
 type Props = {
   defaultOpen: boolean;
@@ -22,6 +15,7 @@ type Props = {
 
 const MenuItems = ({ defaultOpen }: Props) => {
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
 
   const openState = useMemo(
     () => (defaultOpen ? { open: true } : {}),
@@ -50,15 +44,15 @@ const MenuItems = ({ defaultOpen }: Props) => {
         showX={!defaultOpen}
         side={"left"}
         className={clsx(
-          "bg-background/80 backdrop-blur-xl fixed top-0 border-r-[1px] p-6",
+          "bg-background/80 backdrop-blur-xl fixed top-0 border-r-[1px] p-6 h-screen",
           {
-            "hidden md:inline-block z-0 w-[300px]": defaultOpen,
+            "hidden md:inline-block z-[30] w-[300px]": defaultOpen,
             "inline-block md:hidden z-[100] w-full": !defaultOpen,
           }
         )}
       >
         <SheetHeader>
-          <div className="flex justify-center flex-col items-center gap-2">
+          <div className="flex justify-center flex-col items-center gap-2 pb-4">
             <Image
               alt="logo"
               src={"/logo3.jpeg"}
@@ -67,13 +61,11 @@ const MenuItems = ({ defaultOpen }: Props) => {
               className="rounded-full dark:ring-1"
             />
           </div>
-          <SheetDescription className="text-center">
-            One Platform To Represent yourself Online!. Choose Multiple Options
-            as per your requirements.
-          </SheetDescription>
+
           <Separator />
         </SheetHeader>
-        <ul className="flex flex-col gap-2 mt-4">
+
+        <ul className="flex flex-col gap-2 h-[50%] justify-center">
           {SideBarOptions.map((option) => (
             <li
               key={option.id}
@@ -84,6 +76,15 @@ const MenuItems = ({ defaultOpen }: Props) => {
             </li>
           ))}
         </ul>
+
+        <div>
+          <Button
+            className="absolute bottom-8"
+            onClick={() => router.push("/upgrade")}
+          >
+            Upgrade to Premium✨
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   );

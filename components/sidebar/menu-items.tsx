@@ -44,7 +44,7 @@ const MenuItems = ({ defaultOpen }: Props) => {
         showX={!defaultOpen}
         side={"left"}
         className={clsx(
-          "bg-background/80 backdrop-blur-xl fixed top-0 border-r-[1px] p-6 h-screen",
+          "bg-background/80 backdrop-blur-xl fixed top-0 border-r-[1px] p-6 h-[100dvh]",
           {
             "hidden md:inline-block z-[30] w-[300px]": defaultOpen,
             "inline-block md:hidden z-[100] w-full": !defaultOpen,

@@ -18,6 +18,7 @@ import { User } from "@prisma/client";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Card, CardHeader, CardTitle } from "../ui/card";
+import { useToast } from "../ui/use-toast";
 
 const formSchema = z.object({
   email: z
@@ -34,31 +35,28 @@ const formSchema = z.object({
 });
 
 const UserDetails = () => {
-  const [userData, setUserData] = useState<User | null>(null);
-
-  useEffect(() => {
-    async function getUserData() {
-      const response = await getUserDetails();
-      //@ts-ignore
-      setUserData(response);
-    }
-
-    getUserData();
-  }, []);
+  const [userData, setUserData] = useState<User | null | undefined>(null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: userData?.email ?? "",
-      firstName: userData?.firstName ?? "",
-      lastName: userData?.lastName ?? "",
-      phoneNumber: userData?.phoneNumber ?? "",
+      email: "",
+      firstName: "",
+      lastName: "",
+      phoneNumber: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    await setUserDetails(values);
-  }
+  useEffect(() => {
+    async function getUserData() {
+      const response = await getUserDetails();
+      setUserData(response);
+      console.log(response);
+    }
+
+    getUserData();
+  }, []);
 
   useEffect(() => {
     if (userData) {
@@ -68,9 +66,21 @@ const UserDetails = () => {
         lastName: userData.lastName,
         phoneNumber: userData.phoneNumber,
       });
-      console.log("in the second useeffect");
     }
+
+    console.log("in second useeffect");
   }, [userData, form]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await setUserDetails(values);
+
+    toast({
+      title: "✅Details has been saved successfully!",
+      description: "You can change your details any time you like!",
+      variant: "default",
+      duration: 2000,
+    });
+  }
 
   return (
     <div className="flex justify-center items-center mt-[30px]">

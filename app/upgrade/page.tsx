@@ -21,7 +21,7 @@ export default async function page() {
     <div className="">
       <Infobar />
       <div className="h-screen flex justify-center mt-[100px] md:items-center md:mt-0">
-        <Tabs defaultValue="account" className="w-[96%] md:w-[70%]">
+        <Tabs defaultValue="subscriptions" className="w-[96%] md:w-[70%]">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="promo">Promo</TabsTrigger>

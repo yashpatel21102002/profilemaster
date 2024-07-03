@@ -1,3 +1,4 @@
+import BlurPage from "@/components/global/blur-page";
 import Infobar from "@/components/global/infobar";
 import Sidebar from "@/components/sidebar/sidebar";
 
@@ -10,7 +11,7 @@ const layout = ({ children }: Props) => {
     <div>
       <Infobar />
       <Sidebar />
-      {children}
+      <BlurPage>{children}</BlurPage>
     </div>
   );
 };

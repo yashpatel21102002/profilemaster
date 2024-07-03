@@ -19,11 +19,23 @@ model User {
   firstName    String
   lastName     String
   email        String        @unique
+  phoneNumber  String?       @unique
+  Address      String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   Subscription Subscription?
+  SocialLinks  SocialLinks?
 
   @@index([email])
+}
+
+model SocialLinks {
+  id           String  @id @default(uuid())
+  link         String
+  platformName String?
+  userId       String  @unique
+
+  User User? @relation(fields: [userId], references: [id])
 }
 
 model Subscription {

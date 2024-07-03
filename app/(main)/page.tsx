@@ -8,6 +8,4 @@ export default async function Home() {
   if (!user) {
     redirect("/sign-in");
   }
-
-  return <div>Hello</div>;
 }

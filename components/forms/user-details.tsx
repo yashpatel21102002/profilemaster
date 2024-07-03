@@ -19,6 +19,8 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Card, CardHeader, CardTitle } from "../ui/card";
 import { useToast } from "../ui/use-toast";
+import { UploadDropzone } from "@/components/global/uploadcomponents";
+import FileUpload from "../global/file-upload";
 
 const formSchema = z.object({
   email: z
@@ -143,6 +145,7 @@ const UserDetails = () => {
                 </FormItem>
               )}
             />
+            <FileUpload apiEndPoint="profileImage" />
             <Button type="submit">Submit</Button>
           </form>
         </Form>

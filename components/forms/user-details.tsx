@@ -21,6 +21,7 @@ import { Card, CardHeader, CardTitle } from "../ui/card";
 import { useToast } from "../ui/use-toast";
 import { UploadDropzone } from "@/components/global/uploadcomponents";
 import FileUpload from "../global/file-upload";
+import { currentUser } from "@clerk/nextjs/server";
 
 const formSchema = z.object({
   email: z
@@ -34,16 +35,21 @@ const formSchema = z.object({
     .string()
     .min(2, { message: "Last name should be at least 2 characters" }),
   phoneNumber: z.any(),
+  profileImage: z.any(),
 });
 
-const UserDetails = () => {
+type Props = {
+  clerkEmail: string;
+};
+
+const UserDetails = ({ clerkEmail }: Props) => {
   const [userData, setUserData] = useState<User | null | undefined>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      email: userData?.email || clerkEmail,
       firstName: "",
       lastName: "",
       phoneNumber: "",
@@ -63,7 +69,7 @@ const UserDetails = () => {
   useEffect(() => {
     if (userData) {
       form.reset({
-        email: userData.email,
+        email: userData?.email || clerkEmail,
         firstName: userData.firstName,
         lastName: userData.lastName,
         phoneNumber: userData.phoneNumber,
@@ -71,7 +77,7 @@ const UserDetails = () => {
     }
 
     console.log("in second useeffect");
-  }, [userData, form]);
+  }, [userData, form, clerkEmail]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     await setUserDetails(values);
@@ -99,7 +105,11 @@ const UserDetails = () => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="abc@gmail.com" {...field} />
+                    <Input
+                      placeholder="abc@gmail.com"
+                      {...field}
+                      disabled={true}
+                    />
                   </FormControl>
                   <FormDescription>This is your username.</FormDescription>
                   <FormMessage />
@@ -139,13 +149,33 @@ const UserDetails = () => {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="+91 514541546" {...field} />
+                    <Input
+                      placeholder="+91 514541546"
+                      {...field}
+                      type="number"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FileUpload apiEndPoint="profileImage" />
+            <FormField
+              control={form.control}
+              name="profileImage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profile Image</FormLabel>
+                  <FormControl>
+                    <FileUpload
+                      apiEndPoint="profileImage"
+                      onChange={field.onChange}
+                      value={field.value}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            ></FormField>
+
             <Button type="submit">Submit</Button>
           </form>
         </Form>

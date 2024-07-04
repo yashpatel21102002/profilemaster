@@ -8,14 +8,18 @@ import Image from "next/image";
 import { Separator } from "../ui/separator";
 import { SideBarOptions } from "@/lib/constants";
 import { useRouter } from "next/navigation";
+import { getUserDetails } from "@/lib/queries";
+import { User } from "@prisma/client";
 
 type Props = {
   defaultOpen: boolean;
+  imageUrl: string;
 };
 
-const MenuItems = ({ defaultOpen }: Props) => {
+const MenuItems = ({ defaultOpen, imageUrl }: Props) => {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+  const [userData, setUserData] = useState<User | null | undefined>(null);
 
   const openState = useMemo(
     () => (defaultOpen ? { open: true } : {}),
@@ -24,6 +28,15 @@ const MenuItems = ({ defaultOpen }: Props) => {
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const getUserData = async () => {
+      const response = await getUserDetails();
+      setUserData(response);
+    };
+
+    getUserData();
   }, []);
 
   if (!isMounted) {
@@ -55,7 +68,7 @@ const MenuItems = ({ defaultOpen }: Props) => {
           <div className="flex justify-center flex-col items-center gap-2 pb-4">
             <Image
               alt="logo"
-              src={"/logo3.jpeg"}
+              src={userData?.profileImage || imageUrl}
               width={150}
               height={150}
               className="rounded-full dark:ring-1"

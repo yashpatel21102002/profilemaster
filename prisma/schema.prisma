@@ -24,17 +24,17 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   Subscription Subscription?
-  SocialLinks  SocialLinks?
+  SocialLinks  SocialLinks[]
   profileImage String?
 
   @@index([email])
 }
 
 model SocialLinks {
-  id           String  @id @default(uuid())
+  id           String @id @default(uuid())
   link         String
-  platformName String?
-  userId       String  @unique
+  platformName String
+  userId       String @unique
 
   User User? @relation(fields: [userId], references: [id])
 }

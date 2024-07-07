@@ -34,8 +34,14 @@ export const getUserDetails = async () => {
     const userData = await prisma.user.findUnique({
         where: {
             email: user.emailAddresses[0].emailAddress
+        },
+        include: {
+            SocialLinks: true
         }
     })
+
+    console.log(userData)
+
 
     //Returning the userData if found then you can get the userdata else null
     return userData;
@@ -53,7 +59,8 @@ export const setUserDetails = async (UserData: Partial<User>) => {
         },
         update: UserData,
         //@ts-ignore
-        create: UserData
+        create: UserData,
+
     })
 
 

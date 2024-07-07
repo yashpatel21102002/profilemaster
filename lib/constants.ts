@@ -27,6 +27,7 @@ import Tune from '@/components/icons/tune'
 import Video from '@/components/icons/video_recorder'
 import Wallet from '@/components/icons/wallet'
 import Warning from '@/components/icons/warning'
+import { FacebookIcon, Github, Instagram, Linkedin, Twitter } from 'lucide-react'
 
 
 
@@ -61,4 +62,38 @@ export const SideBarOptions = [
         icon: Flag,
         href: '/card',
     },
+]
+
+
+export const SocialLinks = [
+    {
+        id: 1,
+        name: "LinkedIn",
+        icon: Linkedin,
+        tw: "text-blue-400"
+    },
+    {
+        id: 2,
+        name: "FaceBook",
+        icon: FacebookIcon,
+        tw: "text-blue-400"
+    },
+    {
+        id: 3,
+        name: "Instagram",
+        icon: Instagram,
+        tw: "text-purple-400"
+    },
+    {
+        id: 4,
+        name: "Twitter",
+        icon: Twitter,
+        tw: 'text-blue-400'
+    },
+    {
+        id: 5,
+        name: "GitHub",
+        icon: Github,
+        tw: 'text-red-400'
+    }
 ]

@@ -12,7 +12,11 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { getUserDetails, setUserDetails } from "@/lib/queries";
+import {
+  deleteSocialLink,
+  getUserDetails,
+  setUserDetails,
+} from "@/lib/queries";
 import { useEffect, useState } from "react";
 import { User } from "@prisma/client";
 import { Input } from "../ui/input";
@@ -25,30 +29,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { useToast } from "../ui/use-toast";
-import { UploadDropzone } from "@/components/global/uploadcomponents";
 import FileUpload from "../global/file-upload";
-import { currentUser } from "@clerk/nextjs/server";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "@/components/ui/command";
-import {
-  DeleteIcon,
-  Eye,
-  Facebook,
-  Globe,
-  Instagram,
-  Linkedin,
-  Plus,
-  Trash,
-  Trash2,
-} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -59,7 +40,9 @@ import {
   SelectValue,
 } from "../ui/select";
 import { SocialLinks } from "@/lib/constants";
-import { twMerge } from "tailwind-merge";
+import { Globe, Loader2, Plus, Trash } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
+import { Loader } from "lucide-react";
 
 const formSchema = z.object({
   email: z
@@ -80,18 +63,17 @@ type Props = {
   clerkEmail: string;
 };
 
-type SocialProps = {
-  link: String;
-  platformName: String;
+type SocialLink = {
+  link: string;
+  platformName: string;
+  id: string;
 };
 
 const UserDetails = ({ clerkEmail }: Props) => {
+  const [dloader, setDloader] = useState(false);
   const [userData, setUserData] = useState<User | null | undefined>(null);
-  const [socials, setSocials] = useState<SocialProps[]>([
-    { link: "", platformName: "" },
-  ]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const { toast } = useToast();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -103,58 +85,75 @@ const UserDetails = ({ clerkEmail }: Props) => {
   });
 
   useEffect(() => {
-    async function getUserData() {
+    async function fetchUserData() {
       const response = await getUserDetails();
       setUserData(response);
-      console.log(response);
-      if (response?.SocialLinks?.length) {
-        setSocials(
-          response?.SocialLinks?.map((social) => ({
-            link: social.link,
-            platformName: social.platformName,
+      if (response?.SocialLinks.length) {
+        setSocialLinks(
+          response.SocialLinks.map((link) => ({
+            link: link.link,
+            platformName: link.platformName,
+            id: link.id,
           }))
         );
       } else {
-        setSocials([{ link: "", platformName: "" }]);
+        setSocialLinks([{ link: "", platformName: "", id: uuidv4() }]);
       }
     }
-
-    getUserData();
+    fetchUserData();
   }, []);
 
   useEffect(() => {
     if (userData) {
       form.reset({
         email: userData?.email || clerkEmail,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        phoneNumber: userData.phoneNumber,
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+        phoneNumber: userData.phoneNumber || "",
       });
     }
-
-    console.log("in second useeffect");
   }, [userData, form, clerkEmail]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    await setUserDetails(values);
-
-    toast({
-      title: "✅Details has been saved successfully!",
-      description: "You can change your details any time you like!",
-      variant: "default",
-      duration: 2000,
-    });
-  }
-
-  const addSocialLink = () => {
-    setSocials([...socials, { link: "", platformName: "" }]);
+  const handleAddSocialLink = () => {
+    setSocialLinks([
+      ...socialLinks,
+      { link: "", platformName: "", id: uuidv4() },
+    ]);
   };
 
-  const removeSocialLink = (index: number) => {
-    const newSocials = socials.filter((_, i) => i !== index);
-    setSocials(
-      newSocials.length ? newSocials : [{ link: "", platformName: "" }]
+  const handleRemoveSocialLink = async (index: number) => {
+    console.log(index);
+    setDloader(true);
+    const updatedLinks = [...socialLinks];
+    await deleteSocialLink(updatedLinks[index].id);
+    updatedLinks.splice(index, 1);
+    setSocialLinks(
+      updatedLinks.length
+        ? updatedLinks
+        : [{ link: "", platformName: "", id: uuidv4() }]
     );
+
+    setDloader(false);
+  };
+
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      console.log(data, socialLinks);
+      await setUserDetails(data, socialLinks);
+      toast({
+        title: "Details Saved",
+        description: "User details and social links updated successfully.",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error updating user details:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update user details. Please try again later.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
   };
 
   return (
@@ -164,7 +163,10 @@ const UserDetails = ({ clerkEmail }: Props) => {
           <CardTitle>Basic User Information</CardTitle>
         </CardHeader>
         <Form {...form}>
-          <form className="space-y-8" onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            className="space-y-8"
+            onSubmit={form.handleSubmit(handleSubmit)}
+          >
             <FormField
               control={form.control}
               name="email"
@@ -172,11 +174,7 @@ const UserDetails = ({ clerkEmail }: Props) => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="abc@gmail.com"
-                      {...field}
-                      disabled={true}
-                    />
+                    <Input placeholder="abc@gmail.com" {...field} disabled />
                   </FormControl>
                   <FormDescription>This is your username.</FormDescription>
                   <FormMessage />
@@ -216,11 +214,7 @@ const UserDetails = ({ clerkEmail }: Props) => {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="+91 514541546"
-                      {...field}
-                      type="number"
-                    />
+                    <Input placeholder="+91 514541546" type="tel" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -241,19 +235,24 @@ const UserDetails = ({ clerkEmail }: Props) => {
                   </FormControl>
                 </FormItem>
               )}
-            ></FormField>
-
-            {/* social Links  */}
+            />
             <Card>
               <CardHeader>
                 <CardTitle>Links</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2">
-                {socials.map((social: SocialProps, index) => (
-                  <div className="flex gap-2 items-center" key={index}>
-                    <Select>
+                {socialLinks.map((social, index) => (
+                  <div className="flex gap-2 items-center" key={social.id}>
+                    <Select
+                      onValueChange={(e) => {
+                        const updatedLinks = [...socialLinks];
+                        updatedLinks[index].platformName = e;
+                        setSocialLinks(updatedLinks);
+                      }}
+                      defaultValue={socialLinks[index].platformName}
+                    >
                       <SelectTrigger className="w-1/4">
-                        <SelectValue placeholder="📌Select Platform" />
+                        <SelectValue placeholder="Select Platform" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -263,7 +262,7 @@ const UserDetails = ({ clerkEmail }: Props) => {
                               <div className="flex items-center gap-2 justify-center">
                                 <link.icon className="h-4 w-4 text-primary" />
                                 <span className="hidden md:flex">
-                                  {link.name}
+                                  <span>{link.name}</span>
                                 </span>
                               </div>
                             </SelectItem>
@@ -273,17 +272,27 @@ const UserDetails = ({ clerkEmail }: Props) => {
                     </Select>
 
                     <Input
-                      placeholder="https:www.instagram.com/instagram/yash_patel2110"
+                      placeholder={`Paste link here!`}
                       className="w-3/4"
+                      value={social.link}
+                      onChange={(e) => {
+                        const updatedLinks = [...socialLinks];
+                        updatedLinks[index].link = e.target.value;
+                        setSocialLinks(updatedLinks);
+                      }}
                     />
                     <Button
                       variant={"outline"}
                       className=" bg-destructive text-white"
-                      onClick={() => removeSocialLink(index)}
+                      onClick={() => handleRemoveSocialLink(index)}
                       type="button"
                       size={"icon"}
                     >
-                      <Trash className="w-4 h-4" />
+                      {dloader ? (
+                        <Loader2 className="animate-spin w-4 h-4" />
+                      ) : (
+                        <Trash className="w-4 h-4" />
+                      )}
                     </Button>
                     <Button variant={"outline"} className="hidden md:flex">
                       <Globe className="w-4 h-4" />
@@ -292,12 +301,15 @@ const UserDetails = ({ clerkEmail }: Props) => {
                 ))}
               </CardContent>
               <CardFooter>
-                <Button size={"icon"} type="button">
-                  <Plus className="w-4 h-4" onClick={addSocialLink} />
+                <Button
+                  size={"icon"}
+                  type="button"
+                  onClick={handleAddSocialLink}
+                >
+                  <Plus className="w-4 h-4" />
                 </Button>
               </CardFooter>
             </Card>
-
             <Button type="submit">Submit</Button>
           </form>
         </Form>

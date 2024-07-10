@@ -34,7 +34,7 @@ model SocialLinks {
   id           String @id @default(uuid())
   link         String
   platformName String
-  userId       String @unique
+  userId       String
 
   User User? @relation(fields: [userId], references: [id])
 }

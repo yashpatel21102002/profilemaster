@@ -60,7 +60,13 @@ type UserDataInput = {
 
 };
 
-export const setUserDetails = async (UserData: UserDataInput, SocialLinks: SocialLinks[]) => {
+type SocialLinksType = {
+    link: string,
+    id: string,
+    platformName: string
+}
+
+export const setUserDetails = async (UserData: UserDataInput, SocialLinks: SocialLinksType[]) => {
     const user = await currentUser();
 
     if (!user || !user.emailAddresses[0]?.emailAddress) {
@@ -88,23 +94,26 @@ export const setUserDetails = async (UserData: UserDataInput, SocialLinks: Socia
         },
     });
 
-    SocialLinks.map(async (socialLink) => {
+    if (SocialLinks.length > 0) {
 
-        await prisma.socialLinks.upsert({
-            where: {
-                id: socialLink.id,
-            },
-            update: {
-                link: socialLink?.link || "",
-                platformName: socialLink?.platformName || ""
-            },
-            create: {
-                link: socialLink?.link || "",
-                platformName: socialLink?.platformName || "",
-                userId: userData.id,
-            },
+        SocialLinks.map(async (socialLink) => {
+
+            await prisma.socialLinks.upsert({
+                where: {
+                    id: socialLink.id,
+                },
+                update: {
+                    link: socialLink?.link || "",
+                    platformName: socialLink?.platformName || ""
+                },
+                create: {
+                    link: socialLink?.link || "",
+                    platformName: socialLink?.platformName || "",
+                    userId: userData.id,
+                },
+            })
         })
-    })
+    }
 
     return userData;
 };

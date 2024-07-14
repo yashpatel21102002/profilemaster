@@ -98,20 +98,27 @@ export const setUserDetails = async (UserData: UserDataInput, SocialLinks: Socia
 
         SocialLinks.map(async (socialLink) => {
 
-            await prisma.socialLinks.upsert({
-                where: {
-                    id: socialLink.id,
-                },
-                update: {
-                    link: socialLink?.link || "",
-                    platformName: socialLink?.platformName || ""
-                },
-                create: {
-                    link: socialLink?.link || "",
-                    platformName: socialLink?.platformName || "",
-                    userId: userData.id,
-                },
-            })
+            if (socialLink.link === "") {
+
+            }
+            else {
+                await prisma.socialLinks.upsert({
+                    where: {
+                        id: socialLink.id,
+                    },
+                    update: {
+                        link: socialLink?.link || "",
+                        platformName: socialLink?.platformName || ""
+                    },
+                    create: {
+                        link: socialLink?.link || "",
+                        platformName: socialLink?.platformName || "",
+                        userId: userData.id,
+                    },
+                })
+            }
+
+
         })
     }
 

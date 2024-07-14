@@ -44,6 +44,10 @@ import { Globe, Loader2, Plus, Trash } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { Loader } from "lucide-react";
 
+const phoneRegex = new RegExp(
+  /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
+);
+
 const formSchema = z.object({
   email: z
     .string()
@@ -55,7 +59,11 @@ const formSchema = z.object({
   lastName: z
     .string()
     .min(2, { message: "Last name should be at least 2 characters" }),
-  phoneNumber: z.any(),
+  phoneNumber: z
+    .string()
+    .regex(phoneRegex, "Invalid Number!")
+    .min(10, { message: "Must be a valid mobile number" })
+    .max(14, { message: "Must be a valid mobile number" }),
   profileImage: z.any(),
 });
 
@@ -70,7 +78,7 @@ type SocialLink = {
 };
 
 const UserDetails = ({ clerkEmail }: Props) => {
-  const [dloader, setDloader] = useState(false);
+  const [dloader, setDloader] = useState<number>(-1);
   const [userData, setUserData] = useState<User | null | undefined>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const { toast } = useToast();
@@ -123,7 +131,7 @@ const UserDetails = ({ clerkEmail }: Props) => {
 
   const handleRemoveSocialLink = async (index: number) => {
     console.log(index);
-    setDloader(true);
+    setDloader(index);
     const updatedLinks = [...socialLinks];
     await deleteSocialLink(updatedLinks[index].id);
     updatedLinks.splice(index, 1);
@@ -133,7 +141,7 @@ const UserDetails = ({ clerkEmail }: Props) => {
         : [{ link: "", platformName: "", id: uuidv4() }]
     );
 
-    setDloader(false);
+    setDloader(-1);
   };
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
@@ -188,7 +196,11 @@ const UserDetails = ({ clerkEmail }: Props) => {
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John" {...field} />
+                    <Input
+                      placeholder="John"
+                      {...field}
+                      style={{ textTransform: "capitalize" }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -201,7 +213,11 @@ const UserDetails = ({ clerkEmail }: Props) => {
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Doe" {...field} />
+                    <Input
+                      placeholder="Doe"
+                      {...field}
+                      style={{ textTransform: "capitalize" }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -288,7 +304,7 @@ const UserDetails = ({ clerkEmail }: Props) => {
                       type="button"
                       size={"icon"}
                     >
-                      {dloader ? (
+                      {dloader >= 0 && index === dloader ? (
                         <Loader2 className="animate-spin w-4 h-4" />
                       ) : (
                         <Trash className="w-4 h-4" />
